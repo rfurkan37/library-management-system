@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Library - Books</title>
+</head>
+<body>
+  <h1>Books in the Library</h1>
+  <table style="width: 80%;" border="1">
+    <tr>
+      <th>ID</th>  
+      <th>Title</th>
+      <th>Author</th>
+      <th>Location</th>
+      <th>Availability</th>
+      <th>ISBN</th>
+      <th>Register Date</th>
+      <th>Actions</th>
+    </tr>
+    <% books.forEach(function(book) { %>
+      <tr>
+        <td><%= book.id %></td>
+        <td><%= book.title %></td>
+        <td><%= book.author %></td>
+        <td><%= book.location %></td>
+        <td><%= (book.is_available == 1) ? "Available" : "Not Available" %></td>
+        <td><%= book.isbn %></td>
+        <td><%= formatDate(book.reg_date) %></td>
+        <td>
+          <form method="POST" action="/books/delete-book/<%=book.id%>">
+            <input type="submit" value="Delete"></form>
+          </form>
+          <form method="get" action="/books/edit-book/<%=book.id%>">
+            <input type="submit" value="Edit">
+        </form>
+        </td>
+      </tr>
+    <% }); %>
+  </table>
+  <br>
+  <form>
+    <input type="button" value="Add Book" onclick="window.location.href='/books/add-book'">
+  </form>
+    
+</body>
+</html>
