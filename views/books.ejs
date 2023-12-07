@@ -7,39 +7,48 @@
   <h1>Books in the Library</h1>
   <table style="width: 80%;" border="1">
     <tr>
-      <th>ID</th>  
       <th>Title</th>
       <th>Author</th>
-      <th>Location</th>
-      <th>Availability</th>
+      <th>Quantity</th>
       <th>ISBN</th>
       <th>Register Date</th>
       <th>Actions</th>
     </tr>
     <% books.forEach(function(book) { %>
       <tr>
-        <td><%= book.id %></td>
-        <td><%= book.title %></td>
-        <td><%= book.author %></td>
-        <td><%= book.location %></td>
-        <td><%= (book.is_available == 1) ? "Available" : "Not Available" %></td>
-        <td><%= book.isbn %></td>
-        <td><%= formatDate(book.reg_date) %></td>
+
         <td>
-          <form method="POST" action="/books/delete-book/<%=book.id%>">
-            <input type="submit" value="Delete"></form>
+          <%= book.title %>
+        </td>
+        <td>
+          <%= book.author %>
+        </td>
+        <td>
+          <%= book.quantity %>
+        </td>
+        <td>
+          <%= book.isbn %>
+        </td>
+        <td>
+          <%= book.registerDate %>
+        </td>
+        <td>
+          <form method="POST" action="/books/<%= book.id %>?_method=DELETE">
+            <button type="submit">Delete</button>
           </form>
-          <form method="get" action="/books/edit-book/<%=book.id%>">
-            <input type="submit" value="Edit">
-        </form>
+          <form method="GET" action="/books/edit/<%= book.id %>">
+            <button type="submit">Edit</button>
+          </form>
         </td>
       </tr>
-    <% }); %>
+      <% }); %>
   </table>
   <br>
   <form>
-    <input type="button" value="Add Book" onclick="window.location.href='/books/add-book'">
+    <input type="button" value="Add Book" onclick="window.location.href='/books/new'">
   </form>
-    
+  <form>
+    <input type="button" value="Back" onclick="window.location.href='/'">
+  </form>
 </body>
 </html>

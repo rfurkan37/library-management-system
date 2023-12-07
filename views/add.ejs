@@ -1,25 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Add Book</title>
 </head>
+
 <body>
-    <form method="POST" action="/books/add-book">
+    <form method="POST" action="/books/add">
         <label for="title">Title :</label><br>
         <input type="text" name="title" id="title" required>
         <br>
         <label for="author">Author :</label><br>
         <input type="text" name="author" id="author" required>
         <br>
-        <label for="location">Location :</label><br>
+        <!--<label for="location">Location :</label><br>
         <input type="text" name="location" id="location" required>
-        <br>
+        <br>-->
         <label for="isbn">ISBN :</label><br>
         <input type="text" name="isbn" id="isbn" required>
         <br>
         <br>
-        <input type="submit" value="Add Book">
+        <input type="submit" value="Add">
+    </form>
+    <br>
+    <form>
+        <input type="button" value="Back" onclick="window.location.href='/books'">
+    </form>
+
 </body>
+
 </html>

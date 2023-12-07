@@ -1,32 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    <form action="/books/edit-book/<%= book.id %>" method="POST">
+    <form action="/books/edit/<%= book.id %>?_method=PUT" method="POST">
         <label for="title">Title :</label><br>
         <input type="text" name="title" id="title" value="<%= book.title %>" required>
         <br>
         <label for="author">Author :</label><br>
         <input type="text" name="author" id="author" value="<%= book.author %>" required>
         <br>
-        <label for="location">Location :</label><br>
-        <input type="text" name="location" id="location" value="<%= book.location %>" required>
-        <br>
         <label for="isbn">ISBN :</label><br>
         <input type="text" name="isbn" id="isbn" value="<%= book.isbn %>" required><br>
-        <label for="is_available">Availability :</label><br>
-        <select name="is_available" id="is_available">
-            <option value="1" <% if (book.is_available == 1) { %> selected <% } %>>Available</option>
-            <option value="0" <% if (book.is_available == 0) { %> selected <% } %>>Not Available</option>
-        </select>
         <br>
-        <br>
-        <input type="submit" value="Submit">
+        <input type="submit" value="Update">
+    </form>
 
-    
+
 </body>
+
 </html>
