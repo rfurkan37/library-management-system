@@ -1,54 +1,446 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Library - Books</title>
-</head>
-<body>
-  <h1>Books in the Library</h1>
-  <table style="width: 80%;" border="1">
-    <tr>
-      <th>Title</th>
-      <th>Author</th>
-      <th>Quantity</th>
-      <th>ISBN</th>
-      <th>Register Date</th>
-      <th>Actions</th>
-    </tr>
-    <% books.forEach(function(book) { %>
-      <tr>
+<%- include('header', { title: 'Books - Library Management System', currentPage: 'books' }) %>
 
-        <td>
-          <%= book.title %>
-        </td>
-        <td>
-          <%= book.author %>
-        </td>
-        <td>
-          <%= book.quantity %>
-        </td>
-        <td>
-          <%= book.isbn %>
-        </td>
-        <td>
-          <%= book.registerDate %>
-        </td>
-        <td>
-          <form method="POST" action="/books/<%= book.id %>?_method=DELETE">
-            <button type="submit">Delete</button>
-          </form>
-          <form method="GET" action="/books/edit/<%= book.id %>">
-            <button type="submit">Edit</button>
-          </form>
-        </td>
-      </tr>
-      <% }); %>
-  </table>
-  <br>
-  <form>
-    <input type="button" value="Add Book" onclick="window.location.href='/books/new'">
-  </form>
-  <form>
-    <input type="button" value="Back" onclick="window.location.href='/'">
-  </form>
-</body>
-</html>
+<div class="content-wrapper">
+    <div style="padding: 2rem;">
+        <!-- Header Section -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="color: var(--gray-800); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-books"></i>
+                    Library Collection
+                </h1>
+                <p style="color: var(--gray-600); margin: 0;">
+                    <%= books.length %> <%= books.length === 1 ? 'book' : 'books' %> in your library
+                </p>
+            </div>
+            <a href="/books/new" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Add New Book
+            </a>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div style="background: var(--gray-100); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <div style="flex: 1; min-width: 300px;">
+                    <input 
+                        type="text" 
+                        name="search"
+                        placeholder="Search by title, author, or ISBN..." 
+                        value="<%= search || '' %>"
+                        style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 8px; font-size: 1rem; transition: var(--transition);"
+                    >
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select name="genre" style="padding: 0.75rem; border: 2px solid var(--gray-300); border-radius: 8px;">
+                        <option value="">All Genres</option>
+                        <option value="fiction" <%= genre === 'fiction' ? 'selected' : '' %>>Fiction</option>
+                        <option value="non-fiction" <%= genre === 'non-fiction' ? 'selected' : '' %>>Non-Fiction</option>
+                        <option value="science" <%= genre === 'science' ? 'selected' : '' %>>Science</option>
+                        <option value="history" <%= genre === 'history' ? 'selected' : '' %>>History</option>
+                    </select>
+                    <select name="availability" style="padding: 0.75rem; border: 2px solid var(--gray-300); border-radius: 8px;">
+                        <option value="">All Books</option>
+                        <option value="available" <%= availability === 'available' ? 'selected' : '' %>>Available</option>
+                        <option value="unavailable" <%= availability === 'unavailable' ? 'selected' : '' %>>Unavailable</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="/books" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Books Grid/List -->
+        <div id="booksContainer">
+            <% if (books.length === 0) { %>
+                <div style="text-align: center; padding: 4rem 2rem; color: var(--gray-600);">
+                    <i class="fas fa-book-open" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <h3 style="margin-bottom: 1rem;">No books found</h3>
+                    <p style="margin-bottom: 2rem;">Start building your library by adding your first book.</p>
+                    <a href="/books/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Your First Book
+                    </a>
+                </div>
+            <% } else { %>
+                <!-- View Toggle -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="toggleView('grid')" id="gridViewBtn" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button onclick="toggleView('list')" id="listViewBtn" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </div>
+                    <span style="color: var(--gray-600); font-size: 0.9rem;">
+                        <span id="visibleCount"><%= books.length %></span> of <%= books.length %> books shown
+                    </span>
+                </div>
+
+                <!-- Grid View -->
+                <div id="gridView" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+                    <% books.forEach(book => { %>
+                        <div class="book-card" data-title="<%= book.title.toLowerCase() %>" data-author="<%= book.author.toLowerCase() %>" data-isbn="<%= book.isbn %>" data-date="<%= book.registerDate %>">
+                            <div style="background: white; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; transition: var(--transition); height: 100%; display: flex; flex-direction: column;">
+                                <div style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); height: 6px;"></div>
+                                
+                                <!-- Book Cover Section -->
+                                <div style="padding: 1rem 1rem 0 1rem;">
+                                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                        <div style="flex-shrink: 0;">
+                                            <% if (book.coverUrl) { %>
+                                                <img src="<%= book.coverUrl %>" alt="<%= book.title %> cover" 
+                                                     style="width: 80px; height: 120px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div style="display: none; width: 80px; height: 120px; background: var(--gray-200); border-radius: 8px; align-items: center; justify-content: center; color: var(--gray-500);">
+                                                    <i class="fas fa-book"></i>
+                                                </div>
+                                            <% } else { %>
+                                                <div style="width: 80px; height: 120px; background: var(--gray-200); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gray-500);">
+                                                    <i class="fas fa-book" style="font-size: 1.5rem;"></i>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                                <h3 style="color: var(--gray-800); margin: 0; font-size: 1.1rem; line-height: 1.3; word-wrap: break-word;"><%= book.title %></h3>
+                                            </div>
+                                            <p style="color: var(--gray-600); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                                                <i class="fas fa-user" style="width: 12px;"></i>
+                                                <%= book.author %>
+                                            </p>
+                                            <% if (book.genre) { %>
+                                                <p style="color: var(--gray-600); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                                                    <i class="fas fa-tag" style="width: 12px;"></i>
+                                                    <%= book.genre %>
+                                                </p>
+                                            <% } %>
+                                            <% if (book.publishedYear) { %>
+                                                <p style="color: var(--gray-600); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                                                    <i class="fas fa-calendar-alt" style="width: 12px;"></i>
+                                                    <%= book.publishedYear %>
+                                                </p>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="padding: 0 1rem 1rem 1rem; flex: 1; display: flex; flex-direction: column;">
+                                    <!-- Availability Status -->
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="background: var(--gray-200); color: var(--gray-600); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">
+                                                <%= book.quantity %> <%= book.quantity === 1 ? 'copy' : 'copies' %>
+                                            </span>
+                                            <% if (typeof book.availableQuantity !== 'undefined') { %>
+                                                <span style="background: <%= book.availableQuantity > 0 ? 'rgba(72, 187, 120, 0.1)' : 'rgba(245, 101, 101, 0.1)' %>; 
+                                                             color: <%= book.availableQuantity > 0 ? 'var(--success-color)' : 'var(--error-color)' %>; 
+                                                             padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">
+                                                    <%= book.availableQuantity > 0 ? 'Available' : 'Unavailable' %>
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- ISBN -->
+                                    <p style="color: var(--gray-600); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; font-family: monospace; font-size: 0.85rem;">
+                                        <i class="fas fa-barcode" style="width: 12px;"></i>
+                                        <%= book.isbn %>
+                                    </p>
+                                    
+                                    <!-- Date -->
+                                    <div style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem;">
+                                        <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <i class="fas fa-calendar"></i>
+                                            Added <%= new Date(book.registerDate).toLocaleDateString() %>
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Actions -->
+                                    <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                                        <a href="/books/edit/<%= book.id %>" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
+                                            <i class="fas fa-edit"></i>
+                                            Edit
+                                        </a>
+                                        <button onclick="reserveBook('<%= book.id %>')" class="btn btn-success btn-sm" 
+                                                <% if (typeof book.availableQuantity !== 'undefined' && book.availableQuantity === 0) { %>disabled style="opacity: 0.5; cursor: not-allowed;"<% } %>>
+                                            <i class="fas fa-calendar-plus"></i>
+                                        </button>
+                                        <button onclick="deleteBook('<%= book.id %>', '<%= book.title %>')" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <!-- List View -->
+                <div id="listView" style="display: none;">
+                    <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);">
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: var(--gray-100);">
+                                        <th style="padding: 1rem; text-align: left; color: var(--gray-800); font-weight: 600; border-bottom: 2px solid var(--gray-300);">
+                                            <i class="fas fa-book"></i> Title
+                                        </th>
+                                        <th style="padding: 1rem; text-align: left; color: var(--gray-800); font-weight: 600; border-bottom: 2px solid var(--gray-300);">
+                                            <i class="fas fa-user"></i> Author
+                                        </th>
+                                        <th style="padding: 1rem; text-align: center; color: var(--gray-800); font-weight: 600; border-bottom: 2px solid var(--gray-300);">
+                                            <i class="fas fa-hashtag"></i> Qty
+                                        </th>
+                                        <th style="padding: 1rem; text-align: left; color: var(--gray-800); font-weight: 600; border-bottom: 2px solid var(--gray-300);">
+                                            <i class="fas fa-barcode"></i> ISBN
+                                        </th>
+                                        <th style="padding: 1rem; text-align: left; color: var(--gray-800); font-weight: 600; border-bottom: 2px solid var(--gray-300);">
+                                            <i class="fas fa-calendar"></i> Date
+                                        </th>
+                                        <th style="padding: 1rem; text-align: center; color: var(--gray-800); font-weight: 600; border-bottom: 2px solid var(--gray-300);">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% books.forEach((book, index) => { %>
+                                        <tr class="book-row" data-title="<%= book.title.toLowerCase() %>" data-author="<%= book.author.toLowerCase() %>" data-isbn="<%= book.isbn %>" data-date="<%= book.registerDate %>" style="border-bottom: 1px solid var(--gray-200); transition: var(--transition);">
+                                            <td style="padding: 1rem; color: var(--gray-800); font-weight: 500;"><%= book.title %></td>
+                                            <td style="padding: 1rem; color: var(--gray-600);"><%= book.author %></td>
+                                            <td style="padding: 1rem; text-align: center;">
+                                                <span style="background: var(--gray-200); color: var(--gray-700); padding: 0.25rem 0.5rem; border-radius: 8px; font-size: 0.9rem;"><%= book.quantity %></span>
+                                            </td>
+                                            <td style="padding: 1rem; font-family: monospace; color: var(--gray-600); font-size: 0.9rem;"><%= book.isbn %></td>
+                                            <td style="padding: 1rem; color: var(--gray-600); font-size: 0.9rem;"><%= new Date(book.registerDate).toLocaleDateString() %></td>
+                                            <td style="padding: 1rem; text-align: center;">
+                                                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                                    <a href="/books/edit/<%= book.id %>" class="btn btn-secondary btn-sm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button onclick="deleteBook('<%= book.id %>', '<%= book.title %>')" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2000; backdrop-filter: blur(5px);">
+    <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 1rem;">
+        <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 500px; width: 100%; box-shadow: var(--shadow-hover);">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--warning-color); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--gray-800); margin-bottom: 0.5rem;">Delete Book</h3>
+                <p style="color: var(--gray-600);">Are you sure you want to delete "<span id="bookTitle"></span>"? This action cannot be undone.</p>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                        Delete Book
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .book-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .book-row:hover {
+        background: var(--gray-100);
+    }
+
+    #searchInput:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .book-card {
+            margin-bottom: 1rem;
+        }
+        
+        .nav-links {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .header-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    let currentBooks = [];
+    let currentView = 'grid';
+
+    // Store books data for filtering
+    document.addEventListener('DOMContentLoaded', function() {
+        const bookCards = document.querySelectorAll('.book-card');
+        currentBooks = Array.from(bookCards).map(card => ({
+            element: card,
+            title: card.dataset.title,
+            author: card.dataset.author,
+            isbn: card.dataset.isbn,
+            date: new Date(card.dataset.date)
+        }));
+        
+        toggleView('grid');
+    });
+
+    function toggleView(view) {
+        currentView = view;
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        const gridBtn = document.getElementById('gridViewBtn');
+        const listBtn = document.getElementById('listViewBtn');
+
+        if (view === 'grid') {
+            gridView.style.display = 'grid';
+            listView.style.display = 'none';
+            gridBtn.classList.add('active');
+            listBtn.classList.remove('active');
+        } else {
+            gridView.style.display = 'none';
+            listView.style.display = 'block';
+            listBtn.classList.add('active');
+            gridBtn.classList.remove('active');
+        }
+    }
+
+    function filterBooks() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const bookCards = document.querySelectorAll('.book-card');
+        const bookRows = document.querySelectorAll('.book-row');
+        let visibleCount = 0;
+
+        // Filter grid view
+        bookCards.forEach(card => {
+            const title = card.dataset.title;
+            const author = card.dataset.author;
+            const isbn = card.dataset.isbn;
+            
+            const matches = title.includes(searchTerm) || 
+                           author.includes(searchTerm) || 
+                           isbn.includes(searchTerm);
+            
+            if (matches) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Filter list view
+        bookRows.forEach(row => {
+            const title = row.dataset.title;
+            const author = row.dataset.author;
+            const isbn = row.dataset.isbn;
+            
+            const matches = title.includes(searchTerm) || 
+                           author.includes(searchTerm) || 
+                           isbn.includes(searchTerm);
+            
+            row.style.display = matches ? 'table-row' : 'none';
+        });
+
+        document.getElementById('visibleCount').textContent = visibleCount;
+    }
+
+    function sortBooks(criteria) {
+        const container = document.getElementById('gridView');
+        const books = Array.from(container.children);
+        
+        books.sort((a, b) => {
+            switch(criteria) {
+                case 'title':
+                    return a.dataset.title.localeCompare(b.dataset.title);
+                case 'author':
+                    return a.dataset.author.localeCompare(b.dataset.author);
+                case 'date':
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+                default:
+                    return 0;
+            }
+        });
+        
+        books.forEach(book => container.appendChild(book));
+    }
+
+    function deleteBook(id, title) {
+        document.getElementById('bookTitle').textContent = title;
+        document.getElementById('deleteForm').action = `/books/${id}?_method=DELETE`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    function reserveBook(bookId) {
+        // Redirect to reservation creation page with pre-selected book
+        window.location.href = `/reservations/new?book=${bookId}`;
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+        }
+    });
+</script>
+
+<%- include('footer') %>

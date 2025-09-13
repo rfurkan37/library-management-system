@@ -1,34 +1,316 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('header', { title: 'Add Book - Library Management System', currentPage: 'add' }) %>
+<div class="content-wrapper" style="max-width: 800px;">
+    <div style="padding: 2rem;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <i class="fas fa-plus" style="font-size: 2rem; color: white;"></i>
+            </div>
+            <h1 style="color: var(--gray-800); margin-bottom: 0.5rem;">Add New Book</h1>
+            <p style="color: var(--gray-600);">Fill in the details below to add a book to your library</p>
+        </div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Book</title>
-</head>
+        <!-- Progress Steps -->
+        <div style="display: flex; justify-content: center; margin-bottom: 3rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="step active" style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold;">1</div>
+                <div style="width: 50px; height: 2px; background: var(--gray-300);"></div>
+                <div class="step" style="width: 30px; height: 30px; border-radius: 50%; background: var(--gray-300); color: var(--gray-600); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold;">2</div>
+                <div style="width: 50px; height: 2px; background: var(--gray-300);"></div>
+                <div class="step" style="width: 30px; height: 30px; border-radius: 50%; background: var(--gray-300); color: var(--gray-600); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold;">3</div>
+            </div>
+        </div>
 
-<body>
-    <form method="POST" action="/books/add">
-        <label for="title">Title :</label><br>
-        <input type="text" name="title" id="title" required>
-        <br>
-        <label for="author">Author :</label><br>
-        <input type="text" name="author" id="author" required>
-        <br>
-        <!--<label for="location">Location :</label><br>
-        <input type="text" name="location" id="location" required>
-        <br>-->
-        <label for="isbn">ISBN :</label><br>
-        <input type="text" name="isbn" id="isbn" required>
-        <br>
-        <br>
-        <input type="submit" value="Add">
-    </form>
-    <br>
-    <form>
-        <input type="button" value="Back" onclick="window.location.href='/books'">
-    </form>
+        <!-- Form -->
+        <form method="POST" action="/books/add" id="addBookForm" style="max-width: 600px; margin: 0 auto;">
+            <div style="display: grid; gap: 1.5rem;">
+                <!-- Title Field -->
+                <div class="form-group">
+                    <label for="title" style="display: block; margin-bottom: 0.5rem; color: var(--gray-800); font-weight: 600;">
+                        <i class="fas fa-book" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                        Book Title *
+                    </label>
+                    <input 
+                        type="text" 
+                        name="title" 
+                        id="title" 
+                        required 
+                        placeholder="Enter the book title"
+                        style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 8px; font-size: 1rem; transition: var(--transition);"
+                        onblur="validateField(this)"
+                        oninput="updateProgress()"
+                    >
+                    <div class="error-message" style="color: var(--error-color); font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+                </div>
 
-</body>
+                <!-- Author Field -->
+                <div class="form-group">
+                    <label for="author" style="display: block; margin-bottom: 0.5rem; color: var(--gray-800); font-weight: 600;">
+                        <i class="fas fa-user" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                        Author *
+                    </label>
+                    <input 
+                        type="text" 
+                        name="author" 
+                        id="author" 
+                        required 
+                        placeholder="Enter the author's name"
+                        style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 8px; font-size: 1rem; transition: var(--transition);"
+                        onblur="validateField(this)"
+                        oninput="updateProgress()"
+                    >
+                    <div class="error-message" style="color: var(--error-color); font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+                </div>
 
-</html>
+                <!-- ISBN Field -->
+                <div class="form-group">
+                    <label for="isbn" style="display: block; margin-bottom: 0.5rem; color: var(--gray-800); font-weight: 600;">
+                        <i class="fas fa-barcode" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                        ISBN *
+                    </label>
+                    <input 
+                        type="text" 
+                        name="isbn" 
+                        id="isbn" 
+                        required 
+                        placeholder="Enter ISBN (10 or 13 digits)"
+                        style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 8px; font-size: 1rem; font-family: monospace; transition: var(--transition);"
+                        onblur="validateField(this)"
+                        oninput="updateProgress(); formatISBN(this)"
+                    >
+                    <small style="color: var(--gray-600); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                        Example: 978-0-12-345678-9 or 0123456789
+                    </small>
+                    <div class="error-message" style="color: var(--error-color); font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+                </div>
+
+                <!-- Quantity Field -->
+                <div class="form-group">
+                    <label for="quantity" style="display: block; margin-bottom: 0.5rem; color: var(--gray-800); font-weight: 600;">
+                        <i class="fas fa-hashtag" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                        Quantity
+                    </label>
+                    <input 
+                        type="number" 
+                        name="quantity" 
+                        id="quantity" 
+                        min="0" 
+                        value="1"
+                        placeholder="Number of copies"
+                        style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 8px; font-size: 1rem; transition: var(--transition);"
+                        onblur="validateField(this)"
+                        oninput="updateProgress()"
+                    >
+                    <div class="error-message" style="color: var(--error-color); font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                <a href="/books" class="btn btn-secondary" style="padding: 0.75rem 2rem;">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Books
+                </a>
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="padding: 0.75rem 2rem;" disabled>
+                    <i class="fas fa-plus"></i>
+                    Add Book
+                </button>
+            </div>
+        </form>
+
+        <!-- Tips Section -->
+        <div style="background: var(--gray-100); border-radius: 12px; padding: 1.5rem; margin-top: 2rem;">
+            <h3 style="color: var(--gray-800); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-lightbulb" style="color: var(--warning-color);"></i>
+                Tips for Adding Books
+            </h3>
+            <ul style="color: var(--gray-600); line-height: 1.6; margin: 0; padding-left: 1.5rem;">
+                <li>Make sure the book title is complete and accurate</li>
+                <li>Include the full name of the author (first and last name)</li>
+                <li>Double-check the ISBN to avoid duplicates</li>
+                <li>Set the correct quantity if you have multiple copies</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-group input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-group input.valid {
+        border-color: var(--success-color);
+    }
+    
+    .form-group input.invalid {
+        border-color: var(--error-color);
+    }
+    
+    .step.active {
+        background: var(--primary-color) !important;
+        color: white !important;
+    }
+    
+    .step.completed {
+        background: var(--success-color) !important;
+        color: white !important;
+    }
+    
+    @media (max-width: 768px) {
+        .content-wrapper {
+            margin: 1rem !important;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    let completedFields = 0;
+    const requiredFields = 3; // title, author, isbn
+    
+    function validateField(field) {
+        const value = field.value.trim();
+        const fieldName = field.name;
+        const errorElement = field.parentNode.querySelector('.error-message');
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Remove previous validation classes
+        field.classList.remove('valid', 'invalid');
+        
+        if (!value) {
+            isValid = false;
+            errorMessage = 'This field is required';
+        } else {
+            switch(fieldName) {
+                case 'title':
+                    if (value.length < 2) {
+                        isValid = false;
+                        errorMessage = 'Title must be at least 2 characters long';
+                    }
+                    break;
+                case 'author':
+                    if (value.length < 2) {
+                        isValid = false;
+                        errorMessage = 'Author name must be at least 2 characters long';
+                    }
+                    break;
+                case 'isbn':
+                    const isbnPattern = /^(97[89])?\d{9}[\dX]$/;
+                    const cleanISBN = value.replace(/[-\s]/g, '');
+                    if (!isbnPattern.test(cleanISBN)) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid ISBN (10 or 13 digits)';
+                    }
+                    break;
+                case 'quantity':
+                    const qty = parseInt(value);
+                    if (isNaN(qty) || qty < 0) {
+                        isValid = false;
+                        errorMessage = 'Quantity must be a positive number';
+                    }
+                    break;
+            }
+        }
+        
+        if (isValid) {
+            field.classList.add('valid');
+            errorElement.style.display = 'none';
+        } else {
+            field.classList.add('invalid');
+            errorElement.textContent = errorMessage;
+            errorElement.style.display = 'block';
+        }
+        
+        return isValid;
+    }
+    
+    function updateProgress() {
+        const title = document.getElementById('title').value.trim();
+        const author = document.getElementById('author').value.trim();
+        const isbn = document.getElementById('isbn').value.trim();
+        
+        completedFields = 0;
+        if (title) completedFields++;
+        if (author) completedFields++;
+        if (isbn) completedFields++;
+        
+        // Update progress steps
+        const steps = document.querySelectorAll('.step');
+        steps.forEach((step, index) => {
+            if (index < completedFields) {
+                step.classList.add('completed');
+                step.classList.remove('active');
+            } else if (index === completedFields) {
+                step.classList.add('active');
+                step.classList.remove('completed');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        });
+        
+        // Enable submit button if all required fields are filled
+        const submitBtn = document.getElementById('submitBtn');
+        if (completedFields === requiredFields) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+        }
+    }
+    
+    function formatISBN(input) {
+        let value = input.value.replace(/[^0-9X]/gi, '');
+        
+        if (value.length === 10) {
+            // Format as ISBN-10: 0-123-45678-9
+            value = value.replace(/(\d{1})(\d{3})(\d{5})(\d{1})/, '$1-$2-$3-$4');
+        } else if (value.length === 13) {
+            // Format as ISBN-13: 978-0-123-45678-9
+            value = value.replace(/(\d{3})(\d{1})(\d{3})(\d{5})(\d{1})/, '$1-$2-$3-$4-$5');
+        }
+        
+        input.value = value;
+    }
+    
+    // Form submission with validation
+    document.getElementById('addBookForm').addEventListener('submit', function(e) {
+        const fields = ['title', 'author', 'isbn', 'quantity'];
+        let allValid = true;
+        
+        fields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (field && !validateField(field)) {
+                allValid = false;
+            }
+        });
+        
+        if (!allValid) {
+            e.preventDefault();
+            alert('Please fix the errors in the form before submitting.');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        showLoading(submitBtn);
+    });
+    
+    // Initialize progress
+    document.addEventListener('DOMContentLoaded', function() {
+        updateProgress();
+    });
+</script>
+
+<%- include('footer') %>
